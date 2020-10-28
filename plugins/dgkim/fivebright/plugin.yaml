@@ -1,0 +1,6 @@
+plugin:
+    name: 'dgkim.fivebright::lang.plugin.name'
+    description: 'dgkim.fivebright::lang.plugin.description'
+    author: 'DG Kim'
+    icon: oc-icon-lightbulb-o
+    homepage: ''
