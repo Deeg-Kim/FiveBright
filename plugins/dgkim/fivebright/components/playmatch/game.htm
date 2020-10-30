@@ -1,0 +1,9 @@
+<div class="players text-center">
+    <p><h4>Players:</h4></p>
+    <p>
+        {{ player1.name }}
+        {% if player2.name is not empty %}
+        | {{ player2.name }}
+        {% endif %}
+    </p>
+</div>

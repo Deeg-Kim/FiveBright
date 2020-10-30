@@ -4,3 +4,17 @@ plugin:
     author: 'DG Kim'
     icon: oc-icon-lightbulb-o
     homepage: ''
+navigation:
+    main-menu-item-fb:
+        label: 'Five Bright'
+        url: dgkim/fivebright/matches
+        icon: icon-lightbulb-o
+        sideMenu:
+            side-menu-item-matches:
+                label: Matches
+                url: dgkim/fivebright/matches
+                icon: icon-play-circle
+            side-menu-item-jeomsu:
+                label: Jeomsu
+                url: dgkim/fivebright/jeomsu
+                icon: icon-dollar

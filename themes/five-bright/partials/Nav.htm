@@ -8,11 +8,17 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                    <a class="nav-link" href="#">Home {% if this.page.id == 'home' %}<span class="sr-only">(current)</span>{% endif %}</a>
+                    <a class="nav-link" href="/">Home {% if this.page.id == 'home' %}<span class="sr-only">(current)</span>{% endif %}</a>
                 </li>
+                {% if user %}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
+                    <a class="nav-link" href="/matches">Matches {% if this.page.id == 'matches' %}<span class="sr-only">(current)</span>{% endif %}</a>
                 </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/login">Sign In</a>
+                </li>
+                {% endif %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
                     <div class="dropdown-menu" aria-labelledby="dropdown01">
@@ -23,8 +29,9 @@
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                {% if user %}
+                <a class="nav-link" href="#" data-request="onLogout" data-request-data="redirect: '/'">Sign out</a>
+                {% endif %}
             </form>
         </div>
     </nav>

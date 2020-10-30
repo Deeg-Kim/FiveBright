@@ -1,0 +1,29 @@
+<table class="table table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Match Creator</th>
+            <th scope="col">Creator Jeomsu</th>
+            <th scope="col">Rounds</th>
+            <th scope="col">Join Game</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if matches is empty %}
+        <tr>
+            <td>No open games!</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% else %}
+        {% for match in matches %}
+        <tr>
+            <td>{{ match.name }}</td>
+            <td>{{ match.jeomsu|number_format(0, '.', ',') }}</td>
+            <td>{{ match.num_games }}</td>
+            <td><a class="btn btn-outline-info" href="./matches/{{ match.id }}" role="button">Join</a></td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+</table>

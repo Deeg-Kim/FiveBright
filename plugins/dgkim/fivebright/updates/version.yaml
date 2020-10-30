@@ -1,2 +1,20 @@
 1.0.1:
-    - Initialize plugin.
+    - 'Initialize plugin.'
+1.0.2:
+    - 'Created table dgkim_fivebright_matches'
+    - builder_table_create_dgkim_fivebright_matches.php
+1.0.3:
+    - 'Updated table dgkim_fivebright_matches'
+    - builder_table_update_dgkim_fivebright_matches.php
+1.0.4:
+    - 'Created table dgkim_fivebright_jeomsu'
+    - builder_table_create_dgkim_fivebright_jeomsu.php
+1.0.5:
+    - 'Updated table dgkim_fivebright_jeomsu'
+    - builder_table_update_dgkim_fivebright_jeomsu.php
+1.0.6:
+    - 'Updated table dgkim_fivebright_jeomsu'
+    - builder_table_update_dgkim_fivebright_jeomsu_2.php
+1.0.7:
+    - 'Updated table dgkim_fivebright_jeomsu'
+    - builder_table_update_dgkim_fivebright_jeomsu_3.php

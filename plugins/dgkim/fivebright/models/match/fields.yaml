@@ -1,0 +1,17 @@
+tabs:
+    fields:
+        player_1_id:
+            label: 'Player 1 ID'
+            span: auto
+            type: number
+            tab: Details
+        player_2_id:
+            label: 'Player 2 ID'
+            span: auto
+            type: number
+            tab: Details
+        num_games:
+            label: 'Number of Games'
+            span: auto
+            type: number
+            tab: Details

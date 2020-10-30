@@ -1,0 +1,15 @@
+<div id="game">
+    {% partial 'playMatch::game' %}
+</div>
+
+{% put scripts %}
+<script>
+$(document).ready(function() {
+    setInterval(function(){
+        $(this).request('onRefresh', {
+            update: { 'playMatch::game': '#game' }
+        });
+    }, 100);
+});
+</script>
+{% endput %}

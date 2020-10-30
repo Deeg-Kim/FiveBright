@@ -2,3 +2,9 @@
 body {
   padding-top: 3.5rem;
 }
+
+.playing-mat {
+    background-color: #132e0c;
+    border-radius: 0;
+    height: 100vh;
+}

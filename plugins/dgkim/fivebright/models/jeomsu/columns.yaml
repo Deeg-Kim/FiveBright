@@ -1,0 +1,10 @@
+columns:
+    player_email:
+        label: 'Player Email'
+        type: text
+        searchable: true
+        sortable: true
+    jeomsu:
+        label: Jeomsu
+        type: number
+        sortable: true

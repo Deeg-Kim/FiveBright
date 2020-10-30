@@ -1,0 +1,12 @@
+tabs:
+    fields:
+        player_email:
+            label: 'Player Email'
+            span: auto
+            type: text
+            tab: Details
+        jeomsu:
+            label: Jeomsu
+            span: auto
+            type: number
+            tab: Details

@@ -1,0 +1,10 @@
+name: Matches
+form: $/dgkim/fivebright/models/match/fields.yaml
+modelClass: DGKim\Fivebright\Models\Match
+defaultRedirect: dgkim/fivebright/matches
+create:
+    redirect: 'dgkim/fivebright/matches/update/:id'
+    redirectClose: dgkim/fivebright/matches
+update:
+    redirect: dgkim/fivebright/matches
+    redirectClose: dgkim/fivebright/matches

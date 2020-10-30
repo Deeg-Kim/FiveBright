@@ -1,0 +1,9 @@
+columns:
+    player_1_id:
+        label: 'Player 1 ID'
+        type: number
+        sortable: true
+    player_2_id:
+        label: 'Player 2 ID'
+        type: number
+        sortable: true

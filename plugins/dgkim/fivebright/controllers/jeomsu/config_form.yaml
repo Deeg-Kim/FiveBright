@@ -1,0 +1,10 @@
+name: Jeomsu
+form: $/dgkim/fivebright/models/jeomsu/fields.yaml
+modelClass: DGKim\Fivebright\Models\Jeomsu
+defaultRedirect: dgkim/fivebright/jeomsu
+create:
+    redirect: 'dgkim/fivebright/jeomsu/update/:id'
+    redirectClose: dgkim/fivebright/jeomsu
+update:
+    redirect: dgkim/fivebright/jeomsu
+    redirectClose: dgkim/fivebright/jeomsu
