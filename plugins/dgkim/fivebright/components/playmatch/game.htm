@@ -1,9 +1,24 @@
-<div class="players text-center">
-    <p><h4>Players:</h4></p>
-    <p>
-        {{ player1.name }}
-        {% if player2.name is not empty %}
-        | {{ player2.name }}
-        {% endif %}
-    </p>
+<div class="row">
+    <div class="text-center col-12">
+        <p><h4><b>Players</b></h4></p>
+    </div>
+</div>
+<div class="row">
+    <div class="text-center col-3 offset-3">
+        <b>Name:</b> {{ player1.name }}<br />
+        <b>Jeomsu:</b> {{ oneJeomsu.jeomsu|number_format(0, '.', ',') }}
+    </div>
+    {% if player2.name is not empty %}
+    <div class="text-center col-3">
+        <b>Name:</b> {{ player2.name }}<br />
+        <b>Jeomsu:</b> {{ twoJeomsu.jeomsu|number_format(0, '.', ',') }}
+    </div>
+    {% endif %}
+</div>
+<div class="row">
+    {% if hand is not empty %}
+    {% for h in hand %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ h }}.png" />
+    {% endfor %}
+    {% endif %}
 </div>
