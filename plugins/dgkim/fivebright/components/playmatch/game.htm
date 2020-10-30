@@ -15,10 +15,81 @@
     </div>
     {% endif %}
 </div>
-<div class="row">
-    {% if hand is not empty %}
-    {% for h in hand %}
+<div class="row" style="height: 15vh">
+    <div class="col-2">
+        {% for m in mat[0] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[1] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[2] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[3] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[4] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[5] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+</div>
+<div class="row" style="height: 15vh">
+    <div class="col-2">
+        {% for m in mat[6] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[7] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[8] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[9] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[10] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in mat[11] %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+</div>
+<div class="row" style="height: 15vh">
+    <div class="col-2 offset-5">
+        {% for m in matJokers %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+</div>
+<div class="row" style="height: 20vh;">
+    <div class="col-12">
+        {% for h in hand %}
         <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ h }}.png" />
-    {% endfor %}
-    {% endif %}
+        {% endfor %}
+    </div>
 </div>

@@ -47,16 +47,11 @@ class PlayMatch extends ComponentBase
 
         $gameStarted = ($playerTwo != null);
         $hand = null;
+        $mat = null;
 
         if ($gameStarted) {
             // Handle game logic only if the game has started
             $twoJeomsu = Jeomsu::where('player_email', $playerTwo->email)->first();
-
-            if ($player == 1) {
-                $hand = $recentGame->player_1_hand;
-            } else if ($player == 2) {
-                $hand = $recentGame->player_2_hand;
-            }
 
             // Handle cards
             if ($recentGame->next_turn == 0) {
@@ -98,6 +93,14 @@ class PlayMatch extends ComponentBase
 
             }
 
+            // Build up visuals
+            if ($player == 1) {
+                $hand = $recentGame->player_1_hand;
+            } else if ($player == 2) {
+                $hand = $recentGame->player_2_hand;
+            }
+
+            $mat = $recentGame->mat_cards;
         } else {
             $twoJeomsu = 0;
         }
@@ -109,24 +112,40 @@ class PlayMatch extends ComponentBase
             $displayHand = explode(",", $hand);
         }
 
+        if ($mat == null) {
+            $displayMat = null;
+        } else {
+            $preDisplayMat = explode(",", $mat);
+            sort($preDisplayMat);
+            $displayMat = array();
+            $displayMatJokers = array();
+
+            $displayMat["joker"] = null;
+            for ($i = 1; $i <= $this->decks; $i++) {
+                $displayMat[] = null;
+            }
+
+            for ($i = 0; $i < count($preDisplayMat); $i++) {
+                $deckId = $this->getDeck($preDisplayMat[$i]);
+                $displayMat[$deckId][] = $preDisplayMat[$i];
+            }
+
+            $displayMatJokers = $displayMat["joker"];
+        }
+
         // Return to view
         return [
             "#game" => $this->renderPartial('playMatch::game', [
+                    "decs" => $this->decks,
                     "player1" => $playerOne,
                     "player2" => $playerTwo,
                     "oneJeomsu" => $oneJeomsu,
                     "twoJeomsu" => $twoJeomsu,
-                    "hand" => $displayHand
+                    "hand" => $displayHand,
+                    "mat" => $displayMat,
+                    "matJokers" => $displayMatJokers
             ])
         ];
-    }
-
-    public function cleanBuildDeck() {
-        for ($i = 1; $i <= $this->decks; $i++) {
-            for ($j = 1; $j <= $this->cards; $j++) {
-                $this->deck[] = $i . "_" . $j;
-            }
-        }
     }
 
     public function componentDetails()
@@ -152,5 +171,23 @@ class PlayMatch extends ComponentBase
             $game->match_id = $match->id;
             $game->save();
         }
+    }
+
+    // Utility functions
+    function cleanBuildDeck() {
+        for ($i = 1; $i <= $this->decks; $i++) {
+            for ($j = 1; $j <= $this->cards; $j++) {
+                $this->deck[] = $i . "_" . $j;
+            }
+        }
+
+        $this->deck[] = "joker_2";
+        $this->deck[] = "joker_3";
+    }
+
+    // Get deck from string
+    function getDeck($str) {
+        $vars = explode("_", $str);
+        return $vars[0];
     }
 }
