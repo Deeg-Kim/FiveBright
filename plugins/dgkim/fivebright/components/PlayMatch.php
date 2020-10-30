@@ -36,20 +36,20 @@ class PlayMatch extends ComponentBase
         $playerTwo = User::where('id', $match->player_2_id)->first();
         $oneJeomsu = Jeomsu::where('player_email', $playerOne->email)->first();
 
-        // Which player am I?
-        $player = 0;
-
-        if ($user->id == $playerOne->id) {
-            $player = 1;
-        } else if ($user->id == $playerTwo->id) {
-            $player = 2;
-        }
-
         $gameStarted = ($playerTwo != null);
         $hand = null;
         $mat = null;
 
         if ($gameStarted) {
+            // Which player am I?
+            $player = 0;
+
+            if ($user->id == $playerOne->id) {
+                $player = 1;
+            } else if ($user->id == $playerTwo->id) {
+                $player = 2;
+            }
+
             // Handle game logic only if the game has started
             $twoJeomsu = Jeomsu::where('player_email', $playerTwo->email)->first();
 
@@ -114,6 +114,7 @@ class PlayMatch extends ComponentBase
 
         if ($mat == null) {
             $displayMat = null;
+            $displayMatJokers = null;
         } else {
             $preDisplayMat = explode(",", $mat);
             sort($preDisplayMat);
