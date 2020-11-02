@@ -48,3 +48,6 @@
 1.0.17:
     - 'Updated table dgkim_fivebright_games'
     - builder_table_update_dgkim_fivebright_games_6.php
+1.0.18:
+    - 'Updated table dgkim_fivebright_games'
+    - builder_table_update_dgkim_fivebright_games_7.php

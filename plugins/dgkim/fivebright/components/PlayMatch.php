@@ -37,6 +37,7 @@ class PlayMatch extends ComponentBase
         $oneJeomsu = Jeomsu::where('player_email', $playerOne->email)->first();
 
         $gameStarted = ($playerTwo != null);
+        $deckCount = $this->decks * $this->cards;
         $hand = null;
         $mat = null;
 
@@ -81,12 +82,12 @@ class PlayMatch extends ComponentBase
                     $matCards[] = $card;
                 }
 
-                $recentGame->player_1_hand = implode($playerOneHand,",");
-                $recentGame->player_2_hand = implode($playerTwoHand,",");
-                $recentGame->mat_cards = implode($matCards,",");
-                $recentGame->deck_cards = implode($this->deck,",");
-                $recentGame->player_1_cards = implode(array(),",");
-                $recentGame->player_2_cards = implode(array(),",");
+                $recentGame->player_1_hand = implode($playerOneHand, ",");
+                $recentGame->player_2_hand = implode($playerTwoHand, ",");
+                $recentGame->mat_cards = implode($matCards, ",");
+                $recentGame->deck_cards = implode($this->deck, ",");
+                $recentGame->player_1_cards = implode(array(), ",");
+                $recentGame->player_2_cards = implode(array(), ",");
 
                 $recentGame->save();
             } else {
@@ -101,6 +102,7 @@ class PlayMatch extends ComponentBase
             }
 
             $mat = $recentGame->mat_cards;
+            $deckCount = count(explode(",", $recentGame->deck_cards));
         } else {
             $twoJeomsu = 0;
         }
@@ -137,16 +139,70 @@ class PlayMatch extends ComponentBase
         // Return to view
         return [
             "#game" => $this->renderPartial('playMatch::game', [
-                    "decs" => $this->decks,
                     "player1" => $playerOne,
                     "player2" => $playerTwo,
                     "oneJeomsu" => $oneJeomsu,
                     "twoJeomsu" => $twoJeomsu,
                     "hand" => $displayHand,
                     "mat" => $displayMat,
-                    "matJokers" => $displayMatJokers
+                    "matJokers" => $displayMatJokers,
+                    "deckCount" => $deckCount
             ])
         ];
+    }
+
+    public function onPlaceCard() {
+        // Get basic details
+        $id = $this->param('id');
+        $match = Match::where('id', $id)->first();
+        $recentGame = Game::where('match_id', $match->id)->orderBy('id', 'desc')->first();
+
+        $user = Auth::getUser();
+        $playerOne = User::where('id', $match->player_1_id)->first();
+        $playerTwo = User::where('id', $match->player_2_id)->first();
+
+        // Which player am I?
+        $player = 0;
+
+        if ($user->id == $playerOne->id) {
+            $player = 1;
+        } else if ($user->id == $playerTwo->id) {
+            $player = 2;
+        }
+
+        // It has to be your turn to play!
+        if ($user->id == $recentGame->next_turn) {
+            $cardPlayed = post("card");
+            $hand = null;
+
+            if ($player == 1) {
+                $hand = $recentGame->player_1_hand;
+            } else if ($player == 2) {
+                $hand = $recentGame->player_2_hand;
+            }
+            $hand = explode(",", $hand);
+
+            // Remove card from the hand
+            $key = array_search($cardPlayed, $hand);
+            array_splice($hand, $key, 1);
+
+            // Place on mat
+            $recentGame->recent_card = $cardPlayed;
+            if ($player == 1) {
+                $recentGame->player_1_hand = implode($hand, ",");
+            } else if ($player == 2) {
+                $recentGame->player_2_hand = implode($hand, ",");
+            }
+
+            $mat = $recentGame->mat_cards;
+            $mat = explode(",", $mat);
+            array_push($mat, $cardPlayed);
+            $mat = implode($mat, ",");
+
+            $recentGame->mat_cards = $mat;
+
+            $recentGame->save();
+        }
     }
 
     public function componentDetails()

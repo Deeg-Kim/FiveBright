@@ -80,16 +80,33 @@
     </div>
 </div>
 <div class="row" style="height: 15vh">
-    <div class="col-2 offset-5">
+    <div class="col-2 offset-4">
         {% for m in matJokers %}
         <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
         {% endfor %}
+    </div>
+    <div class="col-2" >
+        Number of cards left: {{ deckCount }}
+    </div>
+</div>
+<hr style="border-top: 1px solid white;">
+<div class="row">
+    <div class="col-12">
+        <b>Your Cards:</b>
+    </div>
+</div>
+<div class="row" style="height: 20vh;">
+</div>
+<hr style="border-top: 1px solid white;">
+<div class="row">
+    <div class="col-12">
+        <b>Your Hand:</b>
     </div>
 </div>
 <div class="row" style="height: 20vh;">
     <div class="col-12">
         {% for h in hand %}
-        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ h }}.png" />
+        <a href="#" data-request="onPlaceCard" data-request-data="card: '{{ h }}'"><img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ h }}.png" /></a>
         {% endfor %}
     </div>
 </div>
