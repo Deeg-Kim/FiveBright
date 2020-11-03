@@ -95,6 +95,22 @@
     </div>
 </div>
 <hr style="border-top: 1px solid white;">
+{% if askPlayerPlayed == player %}
+<div class="row">
+    <div class="col-12">
+        <b>Which one to capture?</b>
+    </div>
+</div>
+<div class="row" style="height: 15vh">
+    <div class="col-4" >
+        {% for c in askPlayedCards %}
+        <a href="#" data-request="onRefresh" data-request-data="playedSelection: '{{ c }}'">
+            <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ c }}.png" />
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 <div class="row">
     <div class="col-12">
         <b>Your Cards:</b>
