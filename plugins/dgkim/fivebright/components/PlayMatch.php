@@ -16,11 +16,12 @@ use RainLab\User\Models\User;
 class PlayMatch extends ComponentBase
 {
 
-    private $decks = 12;
+    private $suits = 12;
     private $cards = 4;
     private $deck = array();
     private $handCount = 10;
     private $matCardCount = 8;
+    private $delim = ",";
 
     private $gwang = array("1_1", "3_1", "8_1", "11_1", "12_1");
     private $yul = array("2_1", "4_1", "5_1", "6_1", "7_1", "8_2", "9_1", "10_1",
@@ -47,9 +48,14 @@ class PlayMatch extends ComponentBase
         $oneJeomsu = Jeomsu::where('player_email', $playerOne->email)->first();
 
         $gameStarted = ($playerTwo != null);
-        $deckCount = $this->decks * $this->cards;
+        $deckCount = $this->suits * $this->cards;
         $hand = null;
         $mat = null;
+        $cards = null;
+        $myGwang = null;
+        $myYul = null;
+        $myTti = null;
+        $myPi = null;
 
         if ($gameStarted) {
             // Which player am I?
@@ -92,43 +98,140 @@ class PlayMatch extends ComponentBase
                     $matCards[] = $card;
                 }
 
-                $recentGame->player_1_hand = implode($playerOneHand, ",");
-                $recentGame->player_2_hand = implode($playerTwoHand, ",");
-                $recentGame->mat_cards = implode($matCards, ",");
-                $recentGame->deck_cards = implode($this->deck, ",");
-                $recentGame->player_1_cards = implode(array(), ",");
-                $recentGame->player_2_cards = implode(array(), ",");
+                $recentGame->player_1_hand = implode($playerOneHand, $this->delim);
+                $recentGame->player_2_hand = implode($playerTwoHand, $this->delim);
+                $recentGame->mat_cards = implode($matCards, $this->delim);
+                $recentGame->deck_cards = implode($this->deck, $this->delim);
+                $recentGame->player_1_cards = null;
+                $recentGame->player_2_cards = null;
 
                 $recentGame->save();
             } else {
                 if ($recentGame->recent_card != null && $recentGame->recent_flip == null) {
                     // Player has played a card, need to pull from the deck
                     // Popping from the array for convenience: don't get confused by this later!
-                    $currentDeck = explode(",", $recentGame->deck_cards);
+                    $currentDeck = explode($this->delim, $recentGame->deck_cards);
                     $nextCard = array_pop($currentDeck);
-                    $matCards = explode(",", $recentGame->mat_cards);
+                    $matCards = explode($this->delim, $recentGame->mat_cards);
                     array_push($matCards, $nextCard);
 
-                    $recentGame->deck_cards = implode($currentDeck, ",");
-                    $recentGame->mat_cards = implode($matCards, ",");
+                    $recentGame->deck_cards = implode($currentDeck, $this->delim);
+                    $recentGame->mat_cards = implode($matCards, $this->delim);
                     $recentGame->recent_flip = $nextCard;
                     $recentGame->save();
                 } else if ($recentGame->recent_card != null && $recentGame->recent_flip != null) {
-                    // Cards have all been flipped, need to handle pulling cards to player's pile
+                    // Card has been flipped, need to handle pulling cards to player's pile
+                    $currentMat = explode($this->delim, $recentGame->mat_cards);
+                    $mappedCards = $this->mapSuits($currentMat);
 
-                    // Flip to the next player
+                    $playedSuit = $this->getSuit($recentGame->recent_card);
+                    $flippedSuit = $this->getSuit($recentGame->recent_flip);
+
+                    $playerCaptured = null;
+                    if ($player == 1) {
+                        $playerCaptured = $recentGame->player_1_cards;
+                    } else if ($player == 2) {
+                        $playerCaptured = $recentGame->player_2_cards;
+                    }
+                    if ($playerCaptured != null) {
+                        $playerCaptured = explode($this->delim, $playerCaptured);
+                    } else {
+                        $playerCaptured = array();
+                    }
+
+                    if ($playedSuit == $flippedSuit) {
+                        // Going to be ssa, ttadak or chok
+                    } else {
+                        // The played and flipped decks are different, so we can handle separately
+
+                        // Handle the played card
+                        switch (count($mappedCards[$playedSuit])) {
+                            case 1:
+                                // There's no match, bad luck!
+                                break;
+                            case 2:
+                                // Simple case, the card is captured and both arrive in player's hand
+                                $captured = $mappedCards[$playedSuit];
+                                for ($i = 0; $i < 2; $i++) {
+                                    $currentMat = $this->removeCard($captured[$i], $currentMat);
+                                    array_push($playerCaptured, $captured[$i]);
+                                }
+                                break;
+                            case 3:
+                                // Allowed to chose which card from the mat to bring back
+                                break;
+                            case 4:
+                                // Bring back all the cards
+                                break;
+                        }
+
+                        // Handle the flipped card
+                        switch (count($mappedCards[$flippedSuit])) {
+                            case 1:
+                                // There's no match, bad luck!
+                                break;
+                            case 2:
+                                // Simple case, the card is captured and both arrive in player's hand
+                                $captured = $mappedCards[$flippedSuit];
+                                for ($i = 0; $i < 2; $i++) {
+                                    $currentMat = $this->removeCard($captured[$i], $currentMat);
+                                    array_push($playerCaptured, $captured[$i]);
+                                }
+                                break;
+                            case 3:
+                                // Allowed to chose which card from the mat to bring back
+                                break;
+                            case 4:
+                                // Bring back all the cards
+                                break;
+                        }
+                    }
+
+                    // Close out turn and flip to the next player
+                    sort($playerCaptured);
+                    if ($player == 1) {
+                        $recentGame->player_1_cards = implode($playerCaptured, $this->delim);
+                        $recentGame->next_turn = 2;
+                    } else if ($player == 2) {
+                        $recentGame->player_2_cards = implode($playerCaptured, $this->delim);
+                        $recentGame->next_turn = 1;
+                    }
+                    $recentGame->mat_cards = implode($currentMat, $this->delim);
+
+                    $recentGame->recent_card = null;
+                    $recentGame->recent_flip = null;
+                    $recentGame->save();
                 }
             }
 
             // Build up visuals
             if ($player == 1) {
                 $hand = $recentGame->player_1_hand;
+                $cards = explode($this->delim, $recentGame->player_1_cards);
             } else if ($player == 2) {
                 $hand = $recentGame->player_2_hand;
+                $cards = explode($this->delim, $recentGame->player_2_cards);
+            }
+
+            $myGwang = array();
+            $myYul = array();
+            $myTti = array();
+            $myPi = array();
+
+            foreach ($cards as $card) {
+                if (in_array($card, $this->gwang)) {
+                    $myGwang[] = $card;
+                } else if (in_array($card, $this->yul)) {
+                    $myYul[] = $card;
+                } else if (in_array($card, $this->tti)) {
+                    $myTti[] = $card;
+                } else {
+                    $myPi[] = $card;
+                }
             }
 
             $mat = $recentGame->mat_cards;
-            $deckCount = count(explode(",", $recentGame->deck_cards));
+            $deckCount = count(explode($this->delim, $recentGame->deck_cards));
         } else {
             $twoJeomsu = 0;
         }
@@ -137,25 +240,25 @@ class PlayMatch extends ComponentBase
         if ($hand == null) {
             $displayHand = null;
         } else {
-            $displayHand = explode(",", $hand);
+            $displayHand = explode($this->delim, $hand);
         }
 
         if ($mat == null) {
             $displayMat = null;
             $displayMatJokers = null;
         } else {
-            $preDisplayMat = explode(",", $mat);
+            $preDisplayMat = explode($this->delim, $mat);
             sort($preDisplayMat);
             $displayMat = array();
             $displayMatJokers = array();
 
             $displayMat["joker"] = null;
-            for ($i = 1; $i <= $this->decks; $i++) {
+            for ($i = 1; $i <= $this->suits; $i++) {
                 $displayMat[] = null;
             }
 
             for ($i = 0; $i < count($preDisplayMat); $i++) {
-                $deckId = $this->getDeck($preDisplayMat[$i]);
+                $deckId = $this->getSuit($preDisplayMat[$i]);
                 $displayMat[$deckId][] = $preDisplayMat[$i];
             }
 
@@ -172,7 +275,11 @@ class PlayMatch extends ComponentBase
                     "hand" => $displayHand,
                     "mat" => $displayMat,
                     "matJokers" => $displayMatJokers,
-                    "deckCount" => $deckCount
+                    "deckCount" => $deckCount,
+                    "myGwang" => $myGwang,
+                    "myYul" => $myYul,
+                    "myTti" => $myTti,
+                    "myPi" => $myPi
             ])
         ];
     }
@@ -206,24 +313,23 @@ class PlayMatch extends ComponentBase
             } else if ($player == 2) {
                 $hand = $recentGame->player_2_hand;
             }
-            $hand = explode(",", $hand);
+            $hand = explode($this->delim, $hand);
 
             // Remove card from the hand
-            $key = array_search($cardPlayed, $hand);
-            array_splice($hand, $key, 1);
+            $hand = $this->removeCard($cardPlayed, $hand);
 
             // Place on mat
             $recentGame->recent_card = $cardPlayed;
             if ($player == 1) {
-                $recentGame->player_1_hand = implode($hand, ",");
+                $recentGame->player_1_hand = implode($hand, $this->delim);
             } else if ($player == 2) {
-                $recentGame->player_2_hand = implode($hand, ",");
+                $recentGame->player_2_hand = implode($hand, $this->delim);
             }
 
             $mat = $recentGame->mat_cards;
-            $mat = explode(",", $mat);
+            $mat = explode($this->delim, $mat);
             array_push($mat, $cardPlayed);
-            $mat = implode($mat, ",");
+            $mat = implode($mat, $this->delim);
 
             $recentGame->mat_cards = $mat;
 
@@ -258,7 +364,7 @@ class PlayMatch extends ComponentBase
 
     // Utility functions
     function cleanBuildDeck() {
-        for ($i = 1; $i <= $this->decks; $i++) {
+        for ($i = 1; $i <= $this->suits; $i++) {
             for ($j = 1; $j <= $this->cards; $j++) {
                 $this->deck[] = $i . "_" . $j;
             }
@@ -268,9 +374,44 @@ class PlayMatch extends ComponentBase
         $this->deck[] = "joker_3";
     }
 
-    // Get deck from string
-    function getDeck($str) {
+    // Build up sorted mapping of deck number to cards
+    function mapSuits($cards) {
+        $mapping = array();
+        for ($i = 1; $i <= $this->suits; $i++) {
+            $mapping[$i] = array();
+        }
+
+        foreach ($cards as $card) {
+            $deck = $this->getSuit($card);
+            $cardId = $this->getCard($card);
+
+            $mapping[$deck][] = $card;
+        }
+
+        for ($i = 1; $i <= $this->suits; $i++) {
+            sort($mapping[$i]);
+        }
+
+        return $mapping;
+    }
+
+    // Remove card from array
+    function removeCard($card, $arr) {
+        $key = array_search($card, $arr);
+        array_splice($arr, $key, 1);
+
+        return $arr;
+    }
+
+    // Get suit from string
+    function getSuit($str) {
         $vars = explode("_", $str);
         return $vars[0];
+    }
+
+    // Get card from string
+    function getCard($str) {
+        $vars = explode("_", $str);
+        return $vars[1];
     }
 }

@@ -96,6 +96,26 @@
     </div>
 </div>
 <div class="row" style="height: 20vh;">
+    <div class="col-2">
+        {% for c in myGwang %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in myYul %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in myTti %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
+    <div class="col-2">
+        {% for m in myPi %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% endfor %}
+    </div>
 </div>
 <hr style="border-top: 1px solid white;">
 <div class="row">
