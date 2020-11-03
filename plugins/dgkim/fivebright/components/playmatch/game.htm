@@ -1,16 +1,21 @@
 <div class="row">
     <div class="text-center col-12">
-        <p><h4><b>Players</b></h4></p>
+        <p>
+            <h4><b>Players</b></h4>
+            {% if nextTurn != 0 %}
+            It is Player {{ nextTurn }}'s turn!
+            {% endif %}
+        </p>
     </div>
 </div>
 <div class="row">
     <div class="text-center col-3 offset-3">
-        <b>Name:</b> {{ player1.name }}<br />
+        <b>Player 1:</b> {{ player1.name }}<br />
         <b>Jeomsu:</b> {{ oneJeomsu.jeomsu|number_format(0, '.', ',') }}
     </div>
     {% if player2.name is not empty %}
     <div class="text-center col-3">
-        <b>Name:</b> {{ player2.name }}<br />
+        <b>Player 2:</b> {{ player2.name }}<br />
         <b>Jeomsu:</b> {{ twoJeomsu.jeomsu|number_format(0, '.', ',') }}
     </div>
     {% endif %}
@@ -95,25 +100,25 @@
         <b>Your Cards:</b>
     </div>
 </div>
-<div class="row" style="height: 20vh;">
+<div class="row" style="min-height: 20vh;">
     <div class="col-2">
         {% for c in myGwang %}
-        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ c }}.png" />
         {% endfor %}
     </div>
     <div class="col-2">
-        {% for m in myYul %}
-        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% for c in myYul %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ c }}.png" />
         {% endfor %}
     </div>
     <div class="col-2">
-        {% for m in myTti %}
-        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% for c in myTti %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ c }}.png" />
         {% endfor %}
     </div>
     <div class="col-2">
-        {% for m in myPi %}
-        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ m }}.png" />
+        {% for c in myPi %}
+        <img class="goStopCard" src="{{ 'assets/images'|theme }}/{{ c }}.png" />
         {% endfor %}
     </div>
 </div>

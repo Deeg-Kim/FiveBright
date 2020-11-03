@@ -21,6 +21,7 @@ class PlayMatch extends ComponentBase
     private $deck = array();
     private $handCount = 10;
     private $matCardCount = 8;
+    private $maxPlayers = 2;
     private $delim = ",";
 
     private $gwang = array("1_1", "3_1", "8_1", "11_1", "12_1");
@@ -56,6 +57,7 @@ class PlayMatch extends ComponentBase
         $myYul = null;
         $myTti = null;
         $myPi = null;
+        $nextTurn = 0;
 
         if ($gameStarted) {
             // Which player am I?
@@ -110,6 +112,8 @@ class PlayMatch extends ComponentBase
                 if ($recentGame->recent_card != null && $recentGame->recent_flip == null) {
                     // Player has played a card, need to pull from the deck
                     // Popping from the array for convenience: don't get confused by this later!
+                    $playerPlayed = $this->getPlayer($recentGame->recent_card);
+
                     $currentDeck = explode($this->delim, $recentGame->deck_cards);
                     $nextCard = array_pop($currentDeck);
                     $matCards = explode($this->delim, $recentGame->mat_cards);
@@ -117,20 +121,21 @@ class PlayMatch extends ComponentBase
 
                     $recentGame->deck_cards = implode($currentDeck, $this->delim);
                     $recentGame->mat_cards = implode($matCards, $this->delim);
-                    $recentGame->recent_flip = $nextCard;
+                    $recentGame->recent_flip = $playerPlayed . ":" . $nextCard;
                     $recentGame->save();
                 } else if ($recentGame->recent_card != null && $recentGame->recent_flip != null) {
                     // Card has been flipped, need to handle pulling cards to player's pile
                     $currentMat = explode($this->delim, $recentGame->mat_cards);
                     $mappedCards = $this->mapSuits($currentMat);
 
-                    $playedSuit = $this->getSuit($recentGame->recent_card);
-                    $flippedSuit = $this->getSuit($recentGame->recent_flip);
+                    $playerPlayed = $this->getPlayer($recentGame->recent_card);
+                    $playedSuit = $this->getSuit($this->getFullCard($recentGame->recent_card));
+                    $flippedSuit = $this->getSuit($this->getFullCard($recentGame->recent_flip));
 
                     $playerCaptured = null;
-                    if ($player == 1) {
+                    if ($playerPlayed == 1) {
                         $playerCaptured = $recentGame->player_1_cards;
-                    } else if ($player == 2) {
+                    } else if ($playerPlayed == 2) {
                         $playerCaptured = $recentGame->player_2_cards;
                     }
                     if ($playerCaptured != null) {
@@ -185,22 +190,29 @@ class PlayMatch extends ComponentBase
                                 // Bring back all the cards
                                 break;
                         }
-                    }
 
-                    // Close out turn and flip to the next player
-                    sort($playerCaptured);
-                    if ($player == 1) {
-                        $recentGame->player_1_cards = implode($playerCaptured, $this->delim);
-                        $recentGame->next_turn = 2;
-                    } else if ($player == 2) {
-                        $recentGame->player_2_cards = implode($playerCaptured, $this->delim);
-                        $recentGame->next_turn = 1;
-                    }
-                    $recentGame->mat_cards = implode($currentMat, $this->delim);
+                        // Close out turn
+                        sort($playerCaptured);
+                        if ($playerPlayed == 1) {
+                            $recentGame->player_1_cards = implode($playerCaptured, $this->delim);
+                        } else if ($playerPlayed == 2) {
+                            $recentGame->player_2_cards = implode($playerCaptured, $this->delim);
+                        }
+                        $recentGame->mat_cards = implode($currentMat, $this->delim);
 
-                    $recentGame->recent_card = null;
-                    $recentGame->recent_flip = null;
-                    $recentGame->save();
+                        // All actions have been taken care of
+                        $nextPlayer = $recentGame->next_turn + 1;
+
+                        if ($nextPlayer > $this->maxPlayers) {
+                            $nextPlayer = 1;
+                        }
+
+                        $recentGame->next_turn = $nextPlayer;
+                        $recentGame->recent_card = null;
+                        $recentGame->recent_flip = null;
+
+                        $recentGame->save();
+                    }
                 }
             }
 
@@ -225,13 +237,14 @@ class PlayMatch extends ComponentBase
                     $myYul[] = $card;
                 } else if (in_array($card, $this->tti)) {
                     $myTti[] = $card;
-                } else {
+                } else if (in_array($card, $this->pi)) {
                     $myPi[] = $card;
                 }
             }
 
             $mat = $recentGame->mat_cards;
             $deckCount = count(explode($this->delim, $recentGame->deck_cards));
+            $nextTurn = $recentGame->next_turn;
         } else {
             $twoJeomsu = 0;
         }
@@ -279,7 +292,8 @@ class PlayMatch extends ComponentBase
                     "myGwang" => $myGwang,
                     "myYul" => $myYul,
                     "myTti" => $myTti,
-                    "myPi" => $myPi
+                    "myPi" => $myPi,
+                    "nextTurn" => $nextTurn
             ])
         ];
     }
@@ -319,7 +333,7 @@ class PlayMatch extends ComponentBase
             $hand = $this->removeCard($cardPlayed, $hand);
 
             // Place on mat
-            $recentGame->recent_card = $cardPlayed;
+            $recentGame->recent_card = $player . ":" . $cardPlayed;
             if ($player == 1) {
                 $recentGame->player_1_hand = implode($hand, $this->delim);
             } else if ($player == 2) {
@@ -412,6 +426,18 @@ class PlayMatch extends ComponentBase
     // Get card from string
     function getCard($str) {
         $vars = explode("_", $str);
+        return $vars[1];
+    }
+
+    // Get player from long string
+    function getPlayer($str) {
+        $vars = explode(":", $str);
+        return $vars[0];
+    }
+
+    // Get card from long string
+    function getFullCard($str) {
+        $vars = explode(":", $str);
         return $vars[1];
     }
 }
