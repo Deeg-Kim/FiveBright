@@ -22,6 +22,16 @@ class PlayMatch extends ComponentBase
     private $handCount = 10;
     private $matCardCount = 8;
 
+    private $gwang = array("1_1", "3_1", "8_1", "11_1", "12_1");
+    private $yul = array("2_1", "4_1", "5_1", "6_1", "7_1", "8_2", "9_1", "10_1"
+                         "11_2");
+    private $tti = array("1_2", "2_2", "3_2", "4_2", "5_2", "6_2", "7_2", "9_2"
+                         "10_2", "11_3");
+    private $pi = array("1_3", "1_4", "2_3", "2_4", "3_3", "3_4", "4_3", "4_4",
+                        "5_3", "5_4", "6_3", "6_4", "7_3", "7_4", "8_3", "8_4",
+                        "9_3", "9_4", "10_3", "10_4", "11_4", "12_2", "12_3",
+                        "12_4", "joker_2", "joker_3");
+
     public function onRefresh()
     {
         // Get basic details
@@ -91,7 +101,23 @@ class PlayMatch extends ComponentBase
 
                 $recentGame->save();
             } else {
+                if ($recentGame->recent_card != null && $recentGame->recent_flip == null) {
+                    // Player has played a card, need to pull from the deck
+                    // Popping from the array for convenience: don't get confused by this later!
+                    $currentDeck = explode(",", $recentGame->deck_cards);
+                    $nextCard = array_pop($currentDeck);
+                    $matCards = explode(",", $recentGame->mat_cards);
+                    array_push($matCards, $nextCard);
 
+                    $recentGame->deck_cards = implode($currentDeck, ",");
+                    $recentGame->mat_cards = implode($matCards, ",");
+                    $recentGame->recent_flip = $nextCard;
+                    $recentGame->save();
+                } else if ($recentGame->recent_card != null && $recentGame->recent_flip != null) {
+                    // Cards have all been flipped, need to handle pulling cards to player's pile
+
+                    // Flip to the next player
+                }
             }
 
             // Build up visuals
@@ -171,7 +197,7 @@ class PlayMatch extends ComponentBase
         }
 
         // It has to be your turn to play!
-        if ($user->id == $recentGame->next_turn) {
+        if (($user->id == $recentGame->next_turn) && $recentGame->recent_card == null) {
             $cardPlayed = post("card");
             $hand = null;
 
