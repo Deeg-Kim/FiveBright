@@ -215,8 +215,8 @@ class PlayMatch extends ComponentBase
                             $playedClosable = true;
 
                             foreach ($mappedCards[$playedSuit] as $c) {
-                                array_push($playerCaptured, $this->getFullCard($c));
-                                $currentMat = $this->removeCard($this->getFullCard($c), $currentMat);
+                                array_push($playerCaptured, $c);
+                                $currentMat = $this->removeCard($c, $currentMat);
                             }
                         }
 
