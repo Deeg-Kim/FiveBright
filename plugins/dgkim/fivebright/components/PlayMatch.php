@@ -225,8 +225,26 @@ class PlayMatch extends ComponentBase
                             case 3:
                                 // Allowed to chose which card from the mat to bring back
 
-                                // Not closable, as we need to ask the player which to capture
-                                $flippedClosable = false;
+                                // Haven't selected yet
+                                if (post("flippedSelection") == null && $recentGame->flipped_selection == null) {
+                                    $askPlayerFlipped = $playedPlayer;
+                                    $capturableCards = $mappedCards[$flippedSuit];
+                                    $askFlippedCards = $this->removeCard($this->getFullCard($recentGame->recent_flip), $capturableCards);
+
+                                    // Not closable, as we need to ask the player which to capture
+                                    $flippedClosable = false;
+                                } else {
+                                    // Update selection
+                                    $recentGame->played_selection = $playedPlayer . ":" . post("flippedSelection");
+                                    $recentGame->save();
+
+                                    array_push($playerCaptured, $this->getFullCard($recentGame->recent_flip));
+                                    $currentMat = $this->removeCard($this->getFullCard($recentGame->recent_flip), $currentMat);
+                                    array_push($playerCaptured, post("flippedSelection"));
+                                    $currentMat = $this->removeCard(post("flippedSelection"), $currentMat);
+
+                                    $flippedClosable = true;
+                                }
                                 break;
                             case 4:
                                 // Bring back all the cards
@@ -235,7 +253,6 @@ class PlayMatch extends ComponentBase
                         }
 
                         $closable = $playedClosable && $flippedClosable;
-
                         // Close out turn
                         if ($closable) {
                             sort($playerCaptured);
@@ -256,6 +273,8 @@ class PlayMatch extends ComponentBase
                             $recentGame->next_turn = $nextPlayer;
                             $recentGame->recent_card = null;
                             $recentGame->recent_flip = null;
+                            $recentGame->played_selection = null;
+                            $recentGame->flipped_selection = null;
 
                             $recentGame->save();
                         }
@@ -345,7 +364,9 @@ class PlayMatch extends ComponentBase
                     "myPi" => $myPi,
                     "nextTurn" => $nextTurn,
                     "askPlayerPlayed" => $askPlayerPlayed,
-                    "askPlayedCards" => $askPlayedCards
+                    "askPlayedCards" => $askPlayedCards,
+                    "askPlayerFlipped" => $askPlayerFlipped,
+                    "askFlippedCards" => $askFlippedCards
             ])
         ];
     }
