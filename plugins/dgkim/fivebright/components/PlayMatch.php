@@ -23,6 +23,7 @@ class PlayMatch extends ComponentBase
     private $matCardCount = 8;
     private $maxPlayers = 2;
     private $delim = ",";
+    private $playerDelim = ":";
 
     private $gwang = array("1_1", "3_1", "8_1", "11_1", "12_1");
     private $yul = array("2_1", "4_1", "5_1", "6_1", "7_1", "8_2", "9_1", "10_1",
@@ -113,10 +114,10 @@ class PlayMatch extends ComponentBase
 
                 $recentGame->player_1_hand = implode($playerOneHand, $this->delim);
                 $recentGame->player_2_hand = implode($playerTwoHand, $this->delim);
-                $recentGame->mat_cards = implode($matCards, $this->delim);
-                $recentGame->deck_cards = implode($this->deck, $this->delim);
                 $recentGame->player_1_cards = null;
                 $recentGame->player_2_cards = null;
+                $recentGame->setMat($matCards);
+                $recentGame->setDeck($this->deck);
 
                 $recentGame->save();
             } else {
@@ -125,14 +126,12 @@ class PlayMatch extends ComponentBase
                     // Popping from the array for convenience: don't get confused by this later!
                     $playedPlayer = $this->getPlayer($recentGame->recent_card);
 
-                    $currentDeck = explode($this->delim, $recentGame->deck_cards);
-                    $nextCard = array_pop($currentDeck);
-                    $matCards = explode($this->delim, $recentGame->mat_cards);
-                    array_push($matCards, $nextCard);
+                    $nextCard = $recentGame->pullCardFromDeck();
+                    $recentGame->addCardToMat($nextCard);
 
-                    $recentGame->deck_cards = implode($currentDeck, $this->delim);
-                    $recentGame->mat_cards = implode($matCards, $this->delim);
-                    $recentGame->recent_flip = $playedPlayer . ":" . $nextCard;
+                    // Keep track of the most recent flip
+                    $recentGame->recent_flip = $player . $this->playerDelim . $nextCard;
+
                     $recentGame->save();
                 } else if ($recentGame->recent_card != null && $recentGame->recent_flip != null) {
                     // Card has been flipped, need to handle pulling cards to player's pile
@@ -287,10 +286,7 @@ class PlayMatch extends ComponentBase
                             }
 
                             $recentGame->next_turn = $nextPlayer;
-                            $recentGame->recent_card = null;
-                            $recentGame->recent_flip = null;
-                            $recentGame->played_selection = null;
-                            $recentGame->flipped_selection = null;
+                            $recentGame->resetTrackers();
 
                             $recentGame->save();
                         }
@@ -299,18 +295,17 @@ class PlayMatch extends ComponentBase
             }
 
             // Build up visuals
-            if ($player == 1) {
-                $hand = $recentGame->player_1_hand;
-                $cards = explode($this->delim, $recentGame->player_1_cards);
-            } else if ($player == 2) {
-                $hand = $recentGame->player_2_hand;
-                $cards = explode($this->delim, $recentGame->player_2_cards);
-            }
+            $hand = $recentGame->getHandForPlayer($player);
+            $cards = $recentGame->getCardsForPlayer($player);
 
             $myGwang = array();
             $myYul = array();
             $myTti = array();
             $myPi = array();
+
+            if ($cards == null) {
+                $cards = array();
+            }
 
             foreach ($cards as $card) {
                 if (in_array($card, $this->gwang)) {
@@ -331,13 +326,6 @@ class PlayMatch extends ComponentBase
             // The game hasn't started, but we need to set up some basics
             $player = 1;
             $twoJeomsu = 0;
-        }
-
-        // The array will be size 1 when exploding a null array
-        if ($hand == null) {
-            $displayHand = null;
-        } else {
-            $displayHand = explode($this->delim, $hand);
         }
 
         if ($mat == null) {
@@ -370,7 +358,7 @@ class PlayMatch extends ComponentBase
                     "player2" => $playerTwo,
                     "oneJeomsu" => $oneJeomsu,
                     "twoJeomsu" => $twoJeomsu,
-                    "hand" => $displayHand,
+                    "hand" => $hand,
                     "mat" => $displayMat,
                     "matJokers" => $displayMatJokers,
                     "deckCount" => $deckCount,
@@ -410,54 +398,38 @@ class PlayMatch extends ComponentBase
         if (($user->id == $recentGame->next_turn) && $recentGame->recent_card == null) {
             $cardPlayed = post("card");
             $playedSuit = $this->getSuit($cardPlayed);
-            $hand = null;
 
-            if ($player == 1) {
-                $hand = $recentGame->player_1_hand;
-            } else if ($player == 2) {
-                $hand = $recentGame->player_2_hand;
-            }
-            $hand = explode($this->delim, $hand);
-            $mat = $recentGame->mat_cards;
-            $mat = explode($this->delim, $mat);
+            $hand = $recentGame->getHandForPlayer($player);
+            $mat = $recentGame->getMat();
 
             $handMap = $this->mapSuits($hand);
             $matMap = $this->mapSuits($mat);
 
+            // Bomb all the cards in the suit
             if ((count($handMap[$playedSuit]) + count($matMap[$playedSuit])) == 4) {
-                // Bomb all the cards in the suit
                 $playedCards = array();
-                for ($i = 0; $i < count($handMap[$playedSuit]); $i++) {
-                    // Remove all the relevant cards from the hand
-                    $hand = $this->removeCard($handMap[$playedSuit][$i], $hand);
-                    $playedCards[] = $player . ":" . $handMap[$playedSuit][$i];
-                    array_push($mat, $handMap[$playedSuit][$i]);
-                }
 
-                if ($player == 1) {
-                    $recentGame->player_1_hand = implode($hand, $this->delim);
-                } else if ($player == 2) {
-                    $recentGame->player_2_hand = implode($hand, $this->delim);
+                // Remove all the relevant cards from the hand
+                for ($i = 0; $i < count($handMap[$playedSuit]); $i++) {
+                    $cardPlayedIt = $handMap[$playedSuit][$i];
+
+                    $hand = $this->removeCard($cardPlayedIt, $hand);
+                    $playedCards[] = $player . $this->playerDelim . $cardPlayedIt;
+
+                    $recentGame->addCardToMat($cardPlayedIt);
                 }
 
                 $recentGame->recent_card = implode($playedCards, $this->delim);
+                $recentGame->setPlayerHand($player, $hand);
             } else {
                 // Remove card from the hand
                 $hand = $this->removeCard($cardPlayed, $hand);
 
                 // Place on mat
-                $recentGame->recent_card = $player . ":" . $cardPlayed;
-                if ($player == 1) {
-                    $recentGame->player_1_hand = implode($hand, $this->delim);
-                } else if ($player == 2) {
-                    $recentGame->player_2_hand = implode($hand, $this->delim);
-                }
-
-                array_push($mat, $cardPlayed);
+                $recentGame->recent_card = $player . $this->playerDelim . $cardPlayed;
+                $recentGame->setPlayerHand($player, $hand);
+                $recentGame->addCardToMat($cardPlayed);
             }
-
-            $mat = implode($mat, $this->delim);
-            $recentGame->mat_cards = $mat;
             $recentGame->save();
         }
     }
