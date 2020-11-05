@@ -113,6 +113,17 @@ class Game extends Model
         }
     }
 
+    public function setPlayerCards($player, $cardArr) {
+        $cards = implode($cardArr, $this->delim);
+        if ($player == 1) {
+            $this->player_1_cards = $cards;
+        } else if ($player == 2) {
+            $this->player_2_cards = $cards;
+        } else {
+            throw new Exception('Invalid player number!');
+        }
+    }
+
     /**
      * Multi-part functions
      */
@@ -135,5 +146,13 @@ class Game extends Model
         $this->recent_flip = null;
         $this->played_selection = null;
         $this->flipped_selection = null;
+    }
+
+    // Remove card from array
+    private function removeCard($card, $arr) {
+        $key = array_search($card, $arr);
+        array_splice($arr, $key, 1);
+
+        return $arr;
     }
 }

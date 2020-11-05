@@ -135,7 +135,7 @@ class PlayMatch extends ComponentBase
                     $recentGame->save();
                 } else if ($recentGame->recent_card != null && $recentGame->recent_flip != null) {
                     // Card has been flipped, need to handle pulling cards to player's pile
-                    $currentMat = explode($this->delim, $recentGame->mat_cards);
+                    $currentMat = $recentGame->getMat();
                     $mappedCards = $this->mapSuits($currentMat);
 
                     $playedFullCards = explode($this->delim, $recentGame->recent_card);
@@ -144,15 +144,8 @@ class PlayMatch extends ComponentBase
                     $playedSuit = $this->getSuit($this->getFullCard($playedFullCards[0]));
                     $flippedSuit = $this->getSuit($this->getFullCard($recentGame->recent_flip));
 
-                    $playerCaptured = null;
-                    if ($playedPlayer == 1) {
-                        $playerCaptured = $recentGame->player_1_cards;
-                    } else if ($playedPlayer == 2) {
-                        $playerCaptured = $recentGame->player_2_cards;
-                    }
-                    if ($playerCaptured != null) {
-                        $playerCaptured = explode($this->delim, $playerCaptured);
-                    } else {
+                    $playerCaptured = $recentGame->getCardsForPlayer($playedPlayer);
+                    if ($playerCaptured == null) {
                         $playerCaptured = array();
                     }
 
@@ -271,12 +264,8 @@ class PlayMatch extends ComponentBase
                         // Close out turn
                         if ($closable) {
                             sort($playerCaptured);
-                            if ($playedPlayer == 1) {
-                                $recentGame->player_1_cards = implode($playerCaptured, $this->delim);
-                            } else if ($playedPlayer == 2) {
-                                $recentGame->player_2_cards = implode($playerCaptured, $this->delim);
-                            }
-                            $recentGame->mat_cards = implode($currentMat, $this->delim);
+                            $recentGame->setPlayerCards($playedPlayer, $playerCaptured);
+                            $recentGame->setMat($currentMat);
 
                             // All actions have been taken care of
                             $nextPlayer = $recentGame->next_turn + 1;
@@ -320,7 +309,7 @@ class PlayMatch extends ComponentBase
             }
 
             $mat = $recentGame->mat_cards;
-            $deckCount = count(explode($this->delim, $recentGame->deck_cards));
+            $deckCount = count($recentGame->getDeck());
             $nextTurn = $recentGame->next_turn;
         } else {
             // The game hasn't started, but we need to set up some basics
