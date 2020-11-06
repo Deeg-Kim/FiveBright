@@ -25,22 +25,6 @@ class PlayMatch extends ComponentBase
     private $delim = ",";
     private $playerDelim = ":";
 
-    private $gwang = array("1_1", "3_1", "8_1", "11_1", "12_1");
-    private $yul = array("2_1", "4_1", "5_1", "6_1", "7_1", "8_2", "9_1", "10_1",
-                         "11_2");
-    private $tti = array("1_2", "2_2", "3_2", "4_2", "5_2", "6_2", "7_2", "9_2",
-                         "10_2", "11_3");
-    private $pi = array("1_3", "1_4", "2_3", "2_4", "3_3", "3_4", "4_3", "4_4",
-                        "5_3", "5_4", "6_3", "6_4", "7_3", "7_4", "8_3", "8_4",
-                        "9_3", "9_4", "10_3", "10_4", "11_4", "12_2", "12_3",
-                        "12_4", "joker_2", "joker_3");
-    private $onePointPi = array("1_3", "1_4", "2_3", "2_4", "3_3", "3_4", "4_3",
-                                "4_4", "5_3", "5_4", "6_3", "6_4", "7_3", "7_4",
-                                "8_3", "8_4", "9_3", "9_4", "10_3", "10_4",
-                                "12_3", "12_4");
-    private $twoPointPi = array("11_4", "12_2", "joker_2");
-    private $threePointPi = array("joker_3");
-
     public function onRefresh()
     {
         // Get basic details
@@ -61,10 +45,6 @@ class PlayMatch extends ComponentBase
         $hand = null;
         $mat = null;
         $cards = null;
-        $myGwang = null;
-        $myYul = null;
-        $myTti = null;
-        $myPi = null;
         $nextTurn = 0;
         $askPlayerPlayed = 0;
         $askPlayedCards = null;
@@ -186,7 +166,7 @@ class PlayMatch extends ComponentBase
                                         $playedClosable = false;
                                     } else {
                                         // Update selection
-                                        $recentGame->played_selection = $playedPlayer . ":" . post("playedSelection");
+                                        $recentGame->played_selection = $playedPlayer . $this->playerDelim . post("playedSelection");
                                         $recentGame->save();
 
                                         array_push($playerCaptured, $this->getFullCard($recentGame->recent_card));
@@ -241,7 +221,7 @@ class PlayMatch extends ComponentBase
                                     $flippedClosable = false;
                                 } else {
                                     // Update selection
-                                    $recentGame->played_selection = $playedPlayer . ":" . post("flippedSelection");
+                                    $recentGame->played_selection = $playedPlayer . $this->playerDelim . post("flippedSelection");
                                     $recentGame->save();
 
                                     array_push($playerCaptured, $this->getFullCard($recentGame->recent_flip));
@@ -285,28 +265,7 @@ class PlayMatch extends ComponentBase
 
             // Build up visuals
             $hand = $recentGame->getHandForPlayer($player);
-            $cards = $recentGame->getCardsForPlayer($player);
-
-            $myGwang = array();
-            $myYul = array();
-            $myTti = array();
-            $myPi = array();
-
-            if ($cards == null) {
-                $cards = array();
-            }
-
-            foreach ($cards as $card) {
-                if (in_array($card, $this->gwang)) {
-                    $myGwang[] = $card;
-                } else if (in_array($card, $this->yul)) {
-                    $myYul[] = $card;
-                } else if (in_array($card, $this->tti)) {
-                    $myTti[] = $card;
-                } else if (in_array($card, $this->pi)) {
-                    $myPi[] = $card;
-                }
-            }
+            $captured = $recentGame->getSortedCardsByPlayer($player);
 
             $mat = $recentGame->mat_cards;
             $deckCount = count($recentGame->getDeck());
@@ -351,10 +310,10 @@ class PlayMatch extends ComponentBase
                     "mat" => $displayMat,
                     "matJokers" => $displayMatJokers,
                     "deckCount" => $deckCount,
-                    "myGwang" => $myGwang,
-                    "myYul" => $myYul,
-                    "myTti" => $myTti,
-                    "myPi" => $myPi,
+                    "myGwang" => $captured["gwang"],
+                    "myYul" => $captured["yul"],
+                    "myTti" => $captured["tti"],
+                    "myPi" => $captured["pi"],
                     "nextTurn" => $nextTurn,
                     "askPlayerPlayed" => $askPlayerPlayed,
                     "askPlayedCards" => $askPlayedCards,
@@ -479,34 +438,6 @@ class PlayMatch extends ComponentBase
         }
 
         return $mapping;
-    }
-
-    // Pick a card to steal
-    function cardToSteal($cards) {
-        $pi = array_intersect($cards, $this->pi);
-
-        // No cards to steal!
-        if (count($pi) == 0) {
-            return null;
-        }
-
-        $onePointCards = array_intersect($pi, $onePointPi);
-
-        if (count($onePointCards) > 0) {
-            return $onePointCards[0];
-        }
-
-        $twoPointCards = array_intersect($pi, $twoPointPi);
-
-        if (count($twoPointCards) > 0) {
-            return $twoPointCards[0];
-        }
-
-        $threePointCards = array_intersect($pi, $threePointPi);
-
-        if (count($threePointCards) > 0) {
-            return $threePointCards[0];
-        }
     }
 
     // Remove card from array

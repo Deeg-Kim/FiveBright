@@ -26,6 +26,14 @@ class Game extends Model
                         "9_3", "9_4", "10_3", "10_4", "11_4", "12_2", "12_3",
                         "12_4", "joker_2", "joker_3");
 
+
+    private $onePointPi = array("1_3", "1_4", "2_3", "2_4", "3_3", "3_4", "4_3",
+                                "4_4", "5_3", "5_4", "6_3", "6_4", "7_3", "7_4",
+                                "8_3", "8_4", "9_3", "9_4", "10_3", "10_4",
+                                "12_3", "12_4");
+    private $twoPointPi = array("11_4", "12_2", "joker_2");
+    private $threePointPi = array("joker_3");
+
     /*
      * Disable timestamps by default.
      * Remove this line if timestamps are defined in the database table.
@@ -148,11 +156,72 @@ class Game extends Model
         $this->flipped_selection = null;
     }
 
+    public function getSortedCardsByPlayer($player) {
+        $gwang = array();
+        $yul = array();
+        $tti = array();
+        $pi = array();
+        $captured = array();
+
+        $cards = $this->getCardsForPlayer($player);
+
+        if ($cards == null) {
+            $cards = array();
+        }
+
+        foreach ($cards as $card) {
+            if (in_array($card, $this->gwang)) {
+                $gwang[] = $card;
+            } else if (in_array($card, $this->yul)) {
+                $yul[] = $card;
+            } else if (in_array($card, $this->tti)) {
+                $tti[] = $card;
+            } else if (in_array($card, $this->pi)) {
+                $pi[] = $card;
+            }
+        }
+
+        $captured["gwang"] = $gwang;
+        $captured["yul"] = $yul;
+        $captured["tti"] = $tti;
+        $captured["pi"] = $pi;
+
+        return $captured;
+    }
+
     // Remove card from array
     private function removeCard($card, $arr) {
         $key = array_search($card, $arr);
         array_splice($arr, $key, 1);
 
         return $arr;
+    }
+
+    // Pick a card to steal
+    function cardToSteal($cards) {
+        $pi = array_intersect($cards, $this->pi);
+
+        // No cards to steal!
+        if (count($pi) == 0) {
+            return null;
+        }
+
+        $onePointCards = array_intersect($pi, $onePointPi);
+
+        if (count($onePointCards) > 0) {
+            return $onePointCards[0];
+        }
+
+        $twoPointCards = array_intersect($pi, $twoPointPi);
+
+        if (count($twoPointCards) > 0) {
+            return $twoPointCards[0];
+        }
+
+        $threePointCards = array_intersect($pi, $threePointPi);
+
+        if (count($threePointCards) > 0) {
+            return $threePointCards[0];
+        }
     }
 }
