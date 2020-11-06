@@ -131,7 +131,19 @@ class PlayMatch extends ComponentBase
 
                     if ($playedSuit == $flippedSuit) {
                         // Going to be ssa, ttadak or chok
+                        switch (count($mappedCards[$playedSuit])) {
+                            case 2:
+                                // chok
 
+
+                                break;
+                            case 3:
+                                // ssa
+                                break;
+                            case 4:
+                                // ttadak or chabek
+                                break;
+                        }
                     } else {
                         // The played and flipped decks are different, so we can handle separately
 
@@ -146,11 +158,7 @@ class PlayMatch extends ComponentBase
                                     break;
                                 case 2:
                                     // Simple case, the card is captured and both arrive in player's hand
-                                    $captured = $mappedCards[$playedSuit];
-                                    for ($i = 0; $i < 2; $i++) {
-                                        $currentMat = $this->removeCard($captured[$i], $currentMat);
-                                        array_push($playerCaptured, $captured[$i]);
-                                    }
+                                    $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
                                     $playedClosable = true;
                                     break;
                                 case 3:
@@ -169,27 +177,22 @@ class PlayMatch extends ComponentBase
                                         $recentGame->played_selection = $playedPlayer . $this->playerDelim . post("playedSelection");
                                         $recentGame->save();
 
-                                        array_push($playerCaptured, $this->getFullCard($recentGame->recent_card));
-                                        $currentMat = $this->removeCard($this->getFullCard($recentGame->recent_card), $currentMat);
-                                        array_push($playerCaptured, post("playedSelection"));
-                                        $currentMat = $this->removeCard(post("playedSelection"), $currentMat);
-
+                                        $playerCaptured = array($this->getFullCard($recentGame->recent_card), post("playedSelection"));
+                                        $recentGame->captureCardsFromMat($playedPlayer, $playerCaptured);
                                         $playedClosable = true;
                                     }
                                     break;
                                 case 4:
                                     // This would be a bomb case, but we'll handle here anyway for convenience
+                                    // TODO: Implement and steal
                                     $playedClosable = true;
                                     break;
                             }
                         } else {
                             // If there were multiple cards played, means we bombed
                             $playedClosable = true;
-
-                            foreach ($mappedCards[$playedSuit] as $c) {
-                                array_push($playerCaptured, $c);
-                                $currentMat = $this->removeCard($c, $currentMat);
-                            }
+                            $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
+                            // TODO: Implement steal
                         }
 
                         // Handle the flipped card
@@ -201,11 +204,7 @@ class PlayMatch extends ComponentBase
                                 break;
                             case 2:
                                 // Simple case, the card is captured and both arrive in player's hand
-                                $captured = $mappedCards[$flippedSuit];
-                                for ($i = 0; $i < 2; $i++) {
-                                    $currentMat = $this->removeCard($captured[$i], $currentMat);
-                                    array_push($playerCaptured, $captured[$i]);
-                                }
+                                $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$flippedSuit]);
                                 $flippedClosable = true;
                                 break;
                             case 3:
@@ -224,16 +223,14 @@ class PlayMatch extends ComponentBase
                                     $recentGame->played_selection = $playedPlayer . $this->playerDelim . post("flippedSelection");
                                     $recentGame->save();
 
-                                    array_push($playerCaptured, $this->getFullCard($recentGame->recent_flip));
-                                    $currentMat = $this->removeCard($this->getFullCard($recentGame->recent_flip), $currentMat);
-                                    array_push($playerCaptured, post("flippedSelection"));
-                                    $currentMat = $this->removeCard(post("flippedSelection"), $currentMat);
-
+                                    $playerCaptured = array($this->getFullCard($recentGame->recent_flip), post("flippedSelection"));
+                                    $recentGame->captureCardsFromMat($playedPlayer, $playerCaptured);
                                     $flippedClosable = true;
                                 }
                                 break;
                             case 4:
                                 // Bring back all the cards
+                                // TODO: Implement and steal
                                 $flippedClosable = true;
                                 break;
                         }
@@ -243,10 +240,6 @@ class PlayMatch extends ComponentBase
                         $closable = $playedClosable && $flippedClosable;
                         // Close out turn
                         if ($closable) {
-                            sort($playerCaptured);
-                            $recentGame->setPlayerCards($playedPlayer, $playerCaptured);
-                            $recentGame->setMat($currentMat);
-
                             // All actions have been taken care of
                             $nextPlayer = $recentGame->next_turn + 1;
 
@@ -274,6 +267,13 @@ class PlayMatch extends ComponentBase
             // The game hasn't started, but we need to set up some basics
             $player = 1;
             $twoJeomsu = 0;
+
+            $captured = array(
+                "gwang" => null,
+                "yul" => null,
+                "tti" => null,
+                "pi" => null
+            );
         }
 
         if ($mat == null) {
@@ -470,5 +470,16 @@ class PlayMatch extends ComponentBase
     function getFullCard($str) {
         $vars = explode(":", $str);
         return $vars[1];
+    }
+
+    // Get the other player
+    function getOtherPlayer($player) {
+        if ($player == 1) {
+            return 2;
+        } else if ($player == 2) {
+            return 1;
+        } else {
+            throw new Exception('Invalid player number!');
+        }
     }
 }

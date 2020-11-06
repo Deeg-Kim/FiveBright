@@ -149,6 +149,40 @@ class Game extends Model
         $this->setMat($matArray);
     }
 
+    public function captureCardsFromMat($player, $cards) {
+        $mat = $this->getMat();
+        $playerCaptured = $this->getCardsForPlayer($player);
+        if ($playerCaptured == null) {
+            $playerCaptured = array();
+        }
+
+        for ($i = 0; $i < count($cards); $i++) {
+            $mat = $this->removeCard($cards[$i], $mat);
+            array_push($playerCaptured, $cards[$i]);
+        }
+
+        sort($playerCaptured);
+        $this->setPlayerCards($player, $playerCaptured);
+        $this->setMat($mat);
+    }
+
+    public function stealPi($from, $to) {
+        $fromCards = $this->getCardsForPlayer($from);
+        $toCards = $this->getCardsForPlayer($to);
+
+        $cardToSteal = $this->cardToSteal($fromCards);
+
+        if ($cardToSteal == null) {
+            return;
+        }
+
+        $this->removeCard($cardToSteal, $fromCards);
+        $this->setPlayerCards($from, $fromCards);
+
+        array_push($toCards, $cardToSteal);
+        $this->setPlayerCards($to, $toCards);
+    }
+
     public function resetTrackers() {
         $this->recent_card = null;
         $this->recent_flip = null;
@@ -181,10 +215,12 @@ class Game extends Model
             }
         }
 
-        $captured["gwang"] = $gwang;
-        $captured["yul"] = $yul;
-        $captured["tti"] = $tti;
-        $captured["pi"] = $pi;
+        $captured = array(
+            "gwang" => $gwang,
+            "yul" => $yul,
+            "tti" => $tti,
+            "pi" => $pi
+        );
 
         return $captured;
     }
@@ -198,7 +234,7 @@ class Game extends Model
     }
 
     // Pick a card to steal
-    function cardToSteal($cards) {
+    private function cardToSteal($cards) {
         $pi = array_intersect($cards, $this->pi);
 
         // No cards to steal!
