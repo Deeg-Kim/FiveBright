@@ -176,7 +176,7 @@ class Game extends Model
             return;
         }
 
-        $this->removeCard($cardToSteal, $fromCards);
+        $fromCards = $this->removeCard($cardToSteal, $fromCards);
         $this->setPlayerCards($from, $fromCards);
 
         array_push($toCards, $cardToSteal);
@@ -242,20 +242,19 @@ class Game extends Model
             return null;
         }
 
-        $onePointCards = array_intersect($pi, $onePointPi);
-
+        $onePointCards = array_values(array_intersect($pi, $this->onePointPi));
         if (count($onePointCards) > 0) {
             return $onePointCards[0];
         }
 
-        $twoPointCards = array_intersect($pi, $twoPointPi);
-
+        $twoPointCards = array_values(array_intersect($pi, $this->twoPointPi));
+        sort($twoPointCards);
         if (count($twoPointCards) > 0) {
             return $twoPointCards[0];
         }
 
-        $threePointCards = array_intersect($pi, $threePointPi);
-
+        $threePointCards = array_values(array_intersect($pi, $this->threePointPi));
+        sort($threePointCards);
         if (count($threePointCards) > 0) {
             return $threePointCards[0];
         }

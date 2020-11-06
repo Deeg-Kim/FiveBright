@@ -129,13 +129,15 @@ class PlayMatch extends ComponentBase
                         $playerCaptured = array();
                     }
 
+                    $closable = false;
+
                     if ($playedSuit == $flippedSuit) {
                         // Going to be ssa, ttadak or chok
                         switch (count($mappedCards[$playedSuit])) {
                             case 2:
                                 // chok
-
-
+                                $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
+                                $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
                                 break;
                             case 3:
                                 // ssa
@@ -144,6 +146,8 @@ class PlayMatch extends ComponentBase
                                 // ttadak or chabek
                                 break;
                         }
+
+                        $closable = true;
                     } else {
                         // The played and flipped decks are different, so we can handle separately
 
@@ -238,20 +242,21 @@ class PlayMatch extends ComponentBase
                         // TODO: Implement sseul
 
                         $closable = $playedClosable && $flippedClosable;
-                        // Close out turn
-                        if ($closable) {
-                            // All actions have been taken care of
-                            $nextPlayer = $recentGame->next_turn + 1;
+                    }
 
-                            if ($nextPlayer > $this->maxPlayers) {
-                                $nextPlayer = 1;
-                            }
+                    // Close out turn
+                    if ($closable) {
+                        // All actions have been taken care of
+                        $nextPlayer = $recentGame->next_turn + 1;
 
-                            $recentGame->next_turn = $nextPlayer;
-                            $recentGame->resetTrackers();
-
-                            $recentGame->save();
+                        if ($nextPlayer > $this->maxPlayers) {
+                            $nextPlayer = 1;
                         }
+
+                        $recentGame->next_turn = $nextPlayer;
+                        $recentGame->resetTrackers();
+
+                        $recentGame->save();
                     }
                 }
             }
