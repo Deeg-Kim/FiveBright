@@ -51,6 +51,9 @@ class PlayMatch extends ComponentBase
         $askPlayerFlipped = 0;
         $askFlippedCards = null;
 
+        $displayMessage = false;
+        $message = null;
+
         if ($gameStarted) {
             // Which player am I?
             $player = 0;
@@ -141,6 +144,10 @@ class PlayMatch extends ComponentBase
                                 break;
                             case 3:
                                 // ssa
+                                $recentGame->addSsaSuit($playedPlayer, $playedSuit);
+                                $displayMessage = true;
+                                $message = "뿍!!!!";
+                                // TODO: if 3 ssa for a player, game is over
                                 break;
                             case 4:
                                 // ttadak or chabek
@@ -196,7 +203,7 @@ class PlayMatch extends ComponentBase
                             // If there were multiple cards played, means we bombed
                             $playedClosable = true;
                             $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
-                            // TODO: Implement steal
+                            $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
                         }
 
                         // Handle the flipped card
@@ -324,6 +331,10 @@ class PlayMatch extends ComponentBase
                     "askPlayedCards" => $askPlayedCards,
                     "askPlayerFlipped" => $askPlayerFlipped,
                     "askFlippedCards" => $askFlippedCards
+            ]),
+            "#message" => $this->renderPartial('playMatch::message', [
+                    "display" => $displayMessage,
+                    "message" => $message
             ])
         ];
     }

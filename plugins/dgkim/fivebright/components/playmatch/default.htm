@@ -1,3 +1,6 @@
+<div id="message">
+    {% partial 'playMatch::message' %}
+</div>
 <div id="game">
     {% partial 'playMatch::game' %}
 </div>
@@ -5,11 +8,14 @@
 {% put scripts %}
 <script>
 $(document).ready(function() {
-    setInterval(function(){
+    setInterval(function() {
         $(this).request('onRefresh', {
-            update: { 'playMatch::game': '#game' }
+            update: {
+                'playMatch::game': '#game',
+                'playMatch::message': '#message'
+            }
         });
-    }, 300);
+    }, 700);
 });
 </script>
 {% endput %}

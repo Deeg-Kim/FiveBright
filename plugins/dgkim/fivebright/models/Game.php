@@ -183,6 +183,31 @@ class Game extends Model
         $this->setPlayerCards($to, $toCards);
     }
 
+    public function addSsaSuit($player, $suit) {
+        $ssa = null;
+        if ($player == 1) {
+            $ssa = $this->player_1_ssa_suits;
+        } else if ($player == 2) {
+            $ssa = $this->player_2_ssa_suits;
+        } else {
+            throw new Exception('Invalid player number!');
+        }
+
+        if ($ssa == null) {
+            $ssa = array();
+        } else {
+            $ssa = explode($this->delim, $ssa);
+        }
+
+        array_push($ssa, $suit);
+
+        if ($player == 1) {
+            $this->player_1_ssa_suits = implode($ssa, $this->delim);
+        } else if ($player == 2) {
+            $this->player_2_ssa_suits = implode($ssa, $this->delim);
+        }
+    }
+
     public function resetTrackers() {
         $this->recent_card = null;
         $this->recent_flip = null;
@@ -235,6 +260,9 @@ class Game extends Model
 
     // Pick a card to steal
     private function cardToSteal($cards) {
+        if ($cards == null) {
+            $cards = array();
+        }
         $pi = array_intersect($cards, $this->pi);
 
         // No cards to steal!

@@ -26,5 +26,13 @@ body {
 }
 
 img.goStopCard {
-    width: 5vw;
+    height: 10vh;
+}
+
+#message-body {
+    color: black;
+    position: absolute;
+    left: 25%;
+    width: 50vw;
+    z-index: 100;
 }
