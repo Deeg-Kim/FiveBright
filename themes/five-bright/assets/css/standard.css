@@ -33,6 +33,7 @@ img.goStopCard {
     color: black;
     position: absolute;
     left: 25%;
+    top: 50%;
     width: 50vw;
     z-index: 100;
 }

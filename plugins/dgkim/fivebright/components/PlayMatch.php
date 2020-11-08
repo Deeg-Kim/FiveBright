@@ -141,16 +141,22 @@ class PlayMatch extends ComponentBase
                                 // chok
                                 $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
                                 $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+                                $displayMessage = true;
+                                $message = "촉!!!";
                                 break;
                             case 3:
                                 // ssa
                                 $recentGame->addSsaSuit($playedPlayer, $playedSuit);
                                 $displayMessage = true;
-                                $message = "뿍!!!!";
+                                $message = "뿍!!!";
                                 // TODO: if 3 ssa for a player, game is over
                                 break;
                             case 4:
-                                // ttadak or chabek
+                                // ttadak
+                                $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
+                                $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+                                $displayMessage = true;
+                                $message = "따닥!!!";
                                 break;
                         }
 
@@ -194,8 +200,16 @@ class PlayMatch extends ComponentBase
                                     }
                                     break;
                                 case 4:
-                                    // This would be a bomb case, but we'll handle here anyway for convenience
-                                    // TODO: Implement and steal
+                                    // This would be a bomb or chabek, but we'll handle here anyway for convenience
+                                    $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
+                                    $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+
+                                    if ($recentGame->playerHasSsa($playedSuit)) {
+                                        $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+                                        $displayMessage = true;
+                                        $message = "차백!!!";
+                                    }
+
                                     $playedClosable = true;
                                     break;
                             }
@@ -241,12 +255,23 @@ class PlayMatch extends ComponentBase
                                 break;
                             case 4:
                                 // Bring back all the cards
-                                // TODO: Implement and steal
+                                $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$flippedSuit]);
+                                $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+
+                                if ($recentGame->playerHasSsa($playedPlayer, $flippedSuit)) {
+                                    $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+                                }
+
                                 $flippedClosable = true;
                                 break;
                         }
 
-                        // TODO: Implement sseul
+                        if (count($playerCaptured) != 0 && count($recentGame->getMat()) == 0) {
+                            // Sseul
+                            $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
+                            $displayMessage = true;
+                            $message = "쓸!!!";
+                        }
 
                         $closable = $playedClosable && $flippedClosable;
                     }
@@ -279,6 +304,7 @@ class PlayMatch extends ComponentBase
             // The game hasn't started, but we need to set up some basics
             $player = 1;
             $twoJeomsu = 0;
+            $twoSsaCount = 0;
 
             $captured = array(
                 "gwang" => null,
@@ -382,6 +408,9 @@ class PlayMatch extends ComponentBase
 
                     $recentGame->addCardToMat($cardPlayedIt);
                 }
+
+                // Add invisible cards to hand to make the count work
+                $recentGame->addInvisibleCards($player, count($playedCards) - 1);
 
                 $recentGame->recent_card = implode($playedCards, $this->delim);
                 $recentGame->setPlayerHand($player, $hand);

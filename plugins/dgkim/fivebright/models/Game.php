@@ -33,6 +33,7 @@ class Game extends Model
                                 "12_3", "12_4");
     private $twoPointPi = array("11_4", "12_2", "joker_2");
     private $threePointPi = array("joker_3");
+    private $invisible = "invisible";
 
     /*
      * Disable timestamps by default.
@@ -99,6 +100,23 @@ class Game extends Model
         return explode($this->delim, $this->deck_cards);
     }
 
+    public function getSsa($player) {
+        $ssa = null;
+        if ($player == 1) {
+            $ssa = $this->player_1_ssa_suits;
+        } else if ($player == 2) {
+            $ssa = $this->player_2_ssa_suits;
+        } else {
+            throw new Exception('Invalid player number!');
+        }
+
+        if ($ssa == null) {
+            return $ssa;
+        } else {
+            return explode($this->delim, $ssa);
+        }
+    }
+
     /**
      * Setters
      */
@@ -149,6 +167,16 @@ class Game extends Model
         $this->setMat($matArray);
     }
 
+    public function addInvisibleCards($player, $count) {
+        $hand = $this->getHandForPlayer($player);
+
+        for ($i = 0; $i < $count; $i++) {
+            array_push($hand, $invisible);
+        };
+
+        $this->setPlayerHand($player, $hand);
+    }
+
     public function captureCardsFromMat($player, $cards) {
         $mat = $this->getMat();
         $playerCaptured = $this->getCardsForPlayer($player);
@@ -184,14 +212,7 @@ class Game extends Model
     }
 
     public function addSsaSuit($player, $suit) {
-        $ssa = null;
-        if ($player == 1) {
-            $ssa = $this->player_1_ssa_suits;
-        } else if ($player == 2) {
-            $ssa = $this->player_2_ssa_suits;
-        } else {
-            throw new Exception('Invalid player number!');
-        }
+        $ssa = $this->getSsa($player);
 
         if ($ssa == null) {
             $ssa = array();
@@ -248,6 +269,16 @@ class Game extends Model
         );
 
         return $captured;
+    }
+
+    public function playerHasSsa($player, $suit) {
+        $ssa = $this->getSsa($player);
+
+        if ($ssa == null) {
+            $ssa = array();
+        }
+
+        return in_array($suit, $ssa);
     }
 
     // Remove card from array
