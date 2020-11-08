@@ -190,8 +190,8 @@ class Game extends Model
         }
 
         sort($playerCaptured);
-        $this->setPlayerCards($player, $playerCaptured);
         $this->setMat($mat);
+        $this->setPlayerCards($player, $playerCaptured);
     }
 
     public function stealPi($from, $to) {
@@ -227,6 +227,12 @@ class Game extends Model
         } else if ($player == 2) {
             $this->player_2_ssa_suits = implode($ssa, $this->delim);
         }
+    }
+
+    public function addCardToHand($player, $card) {
+        $hand = $this->getHandForPlayer($player);
+        array_push($hand, $card);
+        $this->setPlayerHand($player, $hand);
     }
 
     public function resetTrackers() {

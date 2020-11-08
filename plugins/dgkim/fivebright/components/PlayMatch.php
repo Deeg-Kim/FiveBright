@@ -24,6 +24,7 @@ class PlayMatch extends ComponentBase
     private $maxPlayers = 2;
     private $delim = ",";
     private $playerDelim = ":";
+    private $jokers = array("joker_2", "joker_3");
 
     public function onRefresh()
     {
@@ -102,6 +103,15 @@ class PlayMatch extends ComponentBase
                 $recentGame->setMat($matCards);
                 $recentGame->setDeck($this->deck);
 
+                // TODO: figure out if there's a way to deal the mat and then move the jokers
+                $jokersToCapture = array();
+                for ($i = 0; $i < count ($this->jokers); $i++) {
+                    if (in_array($this->jokers[$i], $matCards)) {
+                        $jokersToCapture[] = $this->jokers[$i];
+                    }
+                }
+                $recentGame->captureCardsFromMat($recentGame->next_turn, $jokersToCapture);
+
                 $recentGame->save();
             } else {
                 if ($recentGame->recent_card != null && $recentGame->recent_flip == null) {
@@ -134,7 +144,21 @@ class PlayMatch extends ComponentBase
 
                     $closable = false;
 
-                    if ($playedSuit == $flippedSuit) {
+                    if ($playedSuit == "joker") {
+                        // Only possible to have played one card
+                        $playedCard = $this->getFullCard($playedFullCards[0]);
+
+                        // Capture the card
+                        $recentGame->captureCardsFromMat($playedPlayer, array($playedCard));
+
+                        // Draw a card for hand to replace the joker
+                        $nextCard = $recentGame->pullCardFromDeck();
+                        $recentGame->addCardToHand($playedPlayer, $nextCard);
+
+                        // Reset parts of the game, but don't increment the turn
+                        $recentGame->resetTrackers();
+                        $recentGame->save();
+                    } else if ($playedSuit == $flippedSuit) {
                         // Going to be ssa, ttadak or chok
                         switch (count($mappedCards[$playedSuit])) {
                             case 2:
@@ -204,7 +228,7 @@ class PlayMatch extends ComponentBase
                                     $recentGame->captureCardsFromMat($playedPlayer, $mappedCards[$playedSuit]);
                                     $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
 
-                                    if ($recentGame->playerHasSsa($playedSuit)) {
+                                    if ($recentGame->playerHasSsa($playedPlayer, $playedSuit)) {
                                         $recentGame->stealPi($this->getOtherPlayer($playedPlayer), $playedPlayer);
                                         $displayMessage = true;
                                         $message = "차백!!!";
@@ -287,7 +311,6 @@ class PlayMatch extends ComponentBase
 
                         $recentGame->next_turn = $nextPlayer;
                         $recentGame->resetTrackers();
-
                         $recentGame->save();
                     }
                 }
@@ -470,6 +493,7 @@ class PlayMatch extends ComponentBase
         for ($i = 1; $i <= $this->suits; $i++) {
             $mapping[$i] = array();
         }
+        $mapping["joker"] = array();
 
         foreach ($cards as $card) {
             $deck = $this->getSuit($card);
