@@ -1,25 +1,22 @@
-# Installation wizard for October
+# Five Bright
+Five Bright is an online multiplayer implementation of Go Stop.
 
-The wizard installation is a recommended way to install October. It is simpler than the command-line installation and doesn't require any special skills.
+## Complete Features
+* Basic implementation of Go Stop game
+    * 2 player synchronization
+    * Ability to flip standard cards across numerous cases
+    * Ability to play jokers
 
-1. Prepare a directory on your server that is empty. It can be a sub-directory, domain root or a sub-domain.
-1. [Download the installer archive file](https://github.com/octobercms/install/archive/master.zip).
-1. Unpack the installer archive to the prepared directory.
-1. Grant writing permissions on the installation directory and all its subdirectories and files.
-1. Navigate to the install.php script in your web browser.
-1. Follow the installation instructions.
+## Prioritized Upcoming Features
+* Basic implementation of Go Stop game
+    * Ability to flip jokers
+    * Ability to play invisble cards
+    * Calculate scoring
+        * Implement ability to flip 9_1 between yul and pi
+    * Implement Go
+* Match creation
+* Leaderboard
+* Animations and waits on playing turns
 
-## Minimum System Requirements
-
-October CMS has a few system requirements:
-
-* PHP version 7.0 or higher
-* PDO PHP Extension
-* cURL PHP Extension
-* OpenSSL PHP Extension
-* Mbstring PHP Library
-* ZipArchive PHP Library
-* GD PHP Library
-
-As of PHP 5.5, some OS distributions may require you to manually install the PHP JSON extension.
-When using Ubuntu, this can be done via ``apt-get install php5-json``.
+## Changelog
+N/A
